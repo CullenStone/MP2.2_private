@@ -9,6 +9,14 @@ class InL2Ranker(metapy.index.RankingFunction):
     """
     Create a new ranking function in Python that can be used in MeTA.
     """
+    def new_ranker():
+        idx = metapy.index.make_inverted_index('config.toml')
+        num_docs = idx.num_docs()
+        unique_terms = idx.unique_terms()
+        avg_doc_len = idx.average_doc_length()
+        corp_terms = idx.total_corpus_terms()
+        print(num_docs)
+
     def __init__(self, some_param=1.0):
         self.param = some_param
         # You *must* call the base class constructor here!
@@ -20,6 +28,8 @@ class InL2Ranker(metapy.index.RankingFunction):
         For fields available in the score_data sd object,
         @see https://meta-toolkit.org/doxygen/structmeta_1_1index_1_1score__data.html
         """
+        #print(self.param)
+
         return (self.param + sd.doc_term_count) / (self.param * sd.doc_unique_terms + sd.doc_size)
 
 
@@ -29,9 +39,11 @@ def load_ranker(cfg_file):
     The parameter to this function, cfg_file, is the path to a
     configuration file used to load the index. You can ignore this for MP2.
     """
-    return metapy.index.JelinekMercer()
+    return metapy.index.OkapiBM25(k1=1.2,b=0.75,k3=500)
+    #return InL2Ranker(new_ranker())
 
 if __name__ == '__main__':
+    print("Hello")
     if len(sys.argv) != 2:
         print("Usage: {} config.toml".format(sys.argv[0]))
         sys.exit(1)
@@ -39,7 +51,8 @@ if __name__ == '__main__':
     cfg = sys.argv[1]
     print('Building or loading index...')
     idx = metapy.index.make_inverted_index(cfg)
-    ranker = load_ranker(cfg)
+    print(idx.num_docs())
+    ranker = metapy.index.OkapiBM25(k1=1.2,b=0.75,k3=500)#load_ranker(cfg)
     ev = metapy.index.IREval(cfg)
 
     with open(cfg, 'r') as fin:
